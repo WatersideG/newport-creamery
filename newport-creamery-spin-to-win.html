@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1a3556">
+<title>Newport Creamery — Spin to Win</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Exact brand colors extracted from Newport Creamery logo PDF */
+  --navy:#1d3c5d;
+  --navy-2:#152e4a;
+  --navy-3:#0e2240;
+  --navy-line:#28507a;
+  --gold:#f6c636;
+  --gold-2:#ffd75a;
+  --gold-3:#c89817;
+  --red:#d12a2a;
+  --red-2:#e8443a;
+  --red-3:#a3171c;
+  --cream:#f3ead4;
+  --cream-2:#e6dcc1;
+  --white:#ffffff;
+  --ink:#0e2240;
+  --shadow:0 18px 50px rgba(0,0,0,.45);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow-x:hidden}
+body{
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--navy);
+  color:var(--white);
+  position:relative;
+  min-height:100vh;
+  min-height:100dvh;
+  -webkit-font-smoothing:antialiased;
+}
+/* Pinstripe background — alternating navy stripes like the logo */
+.bg{
+  position:fixed;inset:0;z-index:-2;
+  background:var(--navy);
+}
+.bg::before{
+  content:'';position:absolute;inset:0;
+  background-image:repeating-linear-gradient(
+    90deg,
+    var(--navy-2) 0 14px,
+    var(--navy)   14px 28px,
+    var(--navy-line) 28px 29px,
+    var(--navy)   29px 43px,
+    var(--navy-3) 43px 57px,
+    var(--navy)   57px 71px
+  );
+  opacity:.95;
+}
+.bg::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%, rgba(255,255,255,.08), transparent 60%),
+             radial-gradient(ellipse at 50% 100%, rgba(0,0,0,.35), transparent 55%);
+}
+
+/* App container — mobile-first, capped to 480 */
+.app{
+  position:relative;z-index:1;
+  max-width:480px;margin:0 auto;
+  min-height:100vh;min-height:100dvh;
+  display:flex;flex-direction:column;
+  padding:28px 22px 28px;
+}
+
+/* Demo ribbon */
+.ribbon{
+  position:fixed;top:0;left:50%;transform:translateX(-50%);
+  background:var(--gold);color:var(--navy);
+  font-size:9px;font-weight:800;letter-spacing:.22em;
+  padding:5px 14px;border-radius:0 0 8px 8px;
+  z-index:60;cursor:pointer;
+  box-shadow:0 2px 10px rgba(0,0,0,.25);
+}
+.ribbon:active{transform:translateX(-50%) translateY(1px)}
+
+/* Screens */
+.screen{display:none;flex:1;flex-direction:column;animation:fadeIn .45s ease}
+.screen.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* Logo lockup — uses the actual Newport Creamery logo */
+.logo{text-align:center;margin:8px 0 22px}
+.logo img{
+  display:block;margin:0 auto;
+  width:220px;max-width:62%;height:auto;
+  filter:drop-shadow(0 6px 14px rgba(0,0,0,.35));
+}
+.logo.compact img{width:160px}
+
+/* Headline */
+.headline{text-align:center;margin:6px 0 22px}
+.headline h1{
+  font-family:'Playfair Display',serif;
+  font-weight:800;font-size:40px;line-height:.95;
+  color:var(--red-2);letter-spacing:.005em;
+  text-shadow:0 2px 0 rgba(0,0,0,.18);
+}
+.headline h1 em{font-style:italic;color:var(--red-2)}
+.headline p{
+  font-size:14px;color:var(--cream);
+  opacity:.85;line-height:1.5;
+  margin-top:10px;max-width:300px;margin-inline:auto;
+}
+
+/* Form card */
+.card{
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(246,198,54,.32);
+  border-radius:18px;padding:20px;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+.field{margin-bottom:14px}
+.field label{
+  display:block;font-size:11px;font-weight:700;
+  letter-spacing:.16em;text-transform:uppercase;
+  color:var(--cream);margin-bottom:7px;
+}
+.field label .opt{
+  font-weight:500;text-transform:none;
+  letter-spacing:.04em;opacity:.65;margin-left:6px;font-size:10px;
+}
+.field input{
+  width:100%;height:52px;padding:0 16px;
+  font-size:16px;font-family:inherit;font-weight:500;
+  background:var(--white);border:2px solid transparent;
+  border-radius:11px;color:var(--ink);
+  transition:border-color .2s,box-shadow .2s;
+}
+.field input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 4px rgba(246,198,54,.22)}
+.field input::placeholder{color:rgba(14,34,64,.38);font-weight:400}
+.field-err{display:none;color:#ffd28a;font-size:12px;margin-top:6px;font-weight:500}
+.field.error input{border-color:#ffd28a}
+.field.error .field-err{display:block}
+
+/* Primary button */
+.btn{
+  width:100%;height:58px;
+  background:linear-gradient(180deg,var(--gold-2),var(--gold));
+  color:var(--navy);
+  font-family:'Inter',sans-serif;font-weight:800;
+  font-size:15px;letter-spacing:.22em;text-transform:uppercase;
+  border:none;border-radius:11px;cursor:pointer;
+  transition:transform .12s ease, box-shadow .12s ease, filter .15s ease;
+  box-shadow:0 4px 0 var(--gold-3),0 10px 24px rgba(0,0,0,.25);
+  margin-top:6px;
+}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--gold-3),0 6px 14px rgba(0,0,0,.2)}
+.btn:disabled{opacity:.55;cursor:not-allowed;filter:grayscale(.2)}
+.btn.ghost{
+  background:transparent;color:var(--cream);
+  border:1.5px solid rgba(243,234,212,.32);
+  box-shadow:none;height:46px;font-size:12px;letter-spacing:.18em;
+}
+.btn.ghost:active{transform:translateY(1px)}
+
+.legal{
+  font-size:10px;color:var(--cream-2);opacity:.55;
+  text-align:center;margin-top:14px;line-height:1.5;
+  letter-spacing:.04em;
+}
+
+.foot{
+  text-align:center;font-size:9px;
+  letter-spacing:.32em;text-transform:uppercase;
+  color:var(--cream-2);opacity:.55;
+  margin-top:auto;padding-top:22px;
+}
+.foot::before{
+  content:'';display:block;width:48px;height:1px;
+  background:rgba(246,198,54,.4);margin:0 auto 14px;
+}
+
+/* Wheel screen */
+.wheel-stage{
+  display:flex;flex-direction:column;align-items:center;
+  margin:8px 0 18px;
+}
+.wheel-wrap{
+  position:relative;
+  width:min(86vw,360px);
+  aspect-ratio:1;
+  margin:6px auto 22px;
+}
+.wheel-pointer{
+  position:absolute;top:-12px;left:50%;
+  transform:translateX(-50%);
+  width:42px;height:54px;z-index:5;
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,.45));
+}
+.wheel-pointer svg{display:block;width:100%;height:100%}
+.wheel-frame{
+  width:100%;height:100%;
+  border-radius:50%;
+  background:radial-gradient(circle at 50% 30%,#fff,#e8dfc5);
+  padding:10px;
+  position:relative;
+  box-shadow:
+    0 0 0 4px var(--gold),
+    0 0 0 6px var(--navy-2),
+    0 0 0 14px rgba(246,198,54,.22),
+    0 22px 50px rgba(0,0,0,.55),
+    inset 0 0 30px rgba(0,0,0,.05);
+}
+.wheel-frame::before{
+  /* light bulbs around the rim */
+  content:'';position:absolute;inset:-2px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 50% 0%, var(--cream-2) 0 3px, transparent 4px),
+    radial-gradient(circle at 100% 50%, var(--cream-2) 0 3px, transparent 4px),
+    radial-gradient(circle at 50% 100%, var(--cream-2) 0 3px, transparent 4px),
+    radial-gradient(circle at 0% 50%, var(--cream-2) 0 3px, transparent 4px),
+    radial-gradient(circle at 85% 15%, var(--cream-2) 0 3px, transparent 4px),
+    radial-gradient(circle at 15% 15%, var(--cream-2) 0 3px, transparent 4px),
+    radial-gradient(circle at 85% 85%, var(--cream-2) 0 3px, transparent 4px),
+    radial-gradient(circle at 15% 85%, var(--cream-2) 0 3px, transparent 4px);
+  opacity:.65;pointer-events:none;
+}
+.wheel{
+  width:100%;height:100%;border-radius:50%;
+  overflow:hidden;position:relative;
+}
+.wheel-svg{
+  width:100%;height:100%;display:block;
+  transform:rotate(0deg);
+  transform-origin:50% 50%;
+  will-change:transform;
+}
+.wheel-svg.spinning{
+  transition:transform 6.2s cubic-bezier(0.17,0.67,0.18,1);
+}
+.wheel-hub{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:22%;height:22%;
+  background:radial-gradient(circle at 35% 30%,var(--gold-2),var(--gold-3));
+  border-radius:50%;
+  border:5px solid var(--white);
+  box-shadow:0 0 0 2px var(--navy-2),inset 0 -4px 8px rgba(0,0,0,.25),0 4px 12px rgba(0,0,0,.3);
+  z-index:3;display:grid;place-items:center;
+}
+.wheel-hub::after{
+  content:'';width:38%;height:38%;
+  background:var(--navy-2);border-radius:50%;
+  box-shadow:inset 0 0 6px rgba(255,255,255,.12);
+}
+
+/* spin status text */
+.spin-status{
+  text-align:center;color:var(--cream);
+  font-size:13px;letter-spacing:.06em;
+  margin-bottom:14px;min-height:18px;
+}
+
+/* Result overlay */
+.overlay{
+  position:fixed;inset:0;
+  background:rgba(13,28,52,.78);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  display:none;align-items:center;justify-content:center;
+  padding:22px;z-index:80;
+  animation:fadeIn .35s ease;
+}
+.overlay.active{display:flex}
+.result-card{
+  background:linear-gradient(180deg,var(--cream),var(--cream-2));
+  border-radius:22px;padding:30px 24px 22px;
+  max-width:380px;width:100%;
+  text-align:center;position:relative;
+  border:3px solid var(--gold);
+  box-shadow:0 30px 80px rgba(0,0,0,.5);
+  animation:pop .55s cubic-bezier(0.34,1.56,0.64,1);
+  max-height:92vh;overflow-y:auto;
+}
+@keyframes pop{
+  from{transform:scale(.6);opacity:0}
+  to{transform:scale(1);opacity:1}
+}
+.result-card .ribbon-tag{
+  position:absolute;top:-14px;left:50%;
+  transform:translateX(-50%);
+  background:var(--navy);color:var(--gold);
+  padding:6px 18px;border-radius:20px;
+  font-size:10px;font-weight:800;letter-spacing:.32em;
+}
+.result-banner{
+  font-family:'Playfair Display',serif;
+  font-weight:800;font-size:34px;
+  color:var(--navy);letter-spacing:.04em;
+  margin-top:6px;
+}
+.result-sub{
+  font-size:13px;color:var(--navy);opacity:.7;
+  margin-top:2px;letter-spacing:.06em;
+}
+.result-prize{
+  font-family:'Playfair Display',serif;
+  font-weight:800;font-size:34px;
+  color:var(--gold-3);
+  margin:14px 0 6px;line-height:1.05;
+}
+.result-prize.grand{font-size:30px}
+.result-desc{
+  font-size:13px;color:var(--navy);opacity:.78;
+  line-height:1.5;margin-bottom:18px;
+}
+.coupon{
+  background:var(--white);
+  border:2px dashed var(--gold);
+  border-radius:12px;padding:14px 12px;
+  margin-bottom:14px;
+  position:relative;
+}
+.coupon::before,.coupon::after{
+  content:'';position:absolute;top:50%;
+  width:14px;height:14px;
+  background:var(--cream);
+  border-radius:50%;transform:translateY(-50%);
+}
+.coupon::before{left:-9px}
+.coupon::after{right:-9px}
+.coupon .lbl{
+  font-size:10px;letter-spacing:.22em;
+  text-transform:uppercase;
+  color:var(--navy);opacity:.6;margin-bottom:4px;
+}
+.coupon .code{
+  font-family:'Inter',monospace;
+  font-weight:800;font-size:24px;
+  letter-spacing:.18em;
+  color:var(--navy);
+}
+.coupon .copy{
+  margin-top:6px;font-size:11px;
+  color:var(--gold-3);font-weight:600;letter-spacing:.06em;
+  cursor:pointer;
+}
+.delivery{
+  background:rgba(26,53,86,.06);
+  border-radius:11px;padding:12px;
+  margin-bottom:14px;text-align:left;
+}
+.del-row{
+  display:flex;align-items:center;gap:11px;
+  font-size:13px;color:var(--navy);
+}
+.del-row + .del-row{margin-top:9px}
+.del-row .icon{
+  width:30px;height:30px;
+  background:var(--gold);border-radius:50%;
+  display:grid;place-items:center;
+  flex-shrink:0;color:var(--navy);
+  font-size:14px;font-weight:700;
+}
+.del-row .info{flex:1;line-height:1.25}
+.del-row .info b{font-weight:700;font-size:12px}
+.del-row .info span{font-size:11px;opacity:.7;display:block}
+.del-row .check{
+  color:#1f7a3a;font-weight:800;font-size:18px;
+}
+.fine{
+  font-size:10.5px;color:var(--navy);
+  opacity:.55;line-height:1.4;
+  margin-bottom:14px;
+}
+
+/* Demo controls modal */
+.demo-modal{
+  position:fixed;inset:0;background:rgba(13,28,52,.85);
+  backdrop-filter:blur(8px);
+  display:none;align-items:flex-end;justify-content:center;
+  z-index:90;animation:fadeIn .3s;
+}
+.demo-modal.active{display:flex}
+.demo-sheet{
+  width:100%;max-width:480px;
+  background:var(--cream);color:var(--navy);
+  border-radius:18px 18px 0 0;
+  padding:22px 20px 28px;
+  animation:slideUp .35s cubic-bezier(0.2,0.7,0.3,1);
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.demo-sheet h3{
+  font-family:'Playfair Display',serif;
+  font-weight:700;font-size:20px;margin-bottom:4px;
+}
+.demo-sheet .demo-help{
+  font-size:12px;opacity:.7;margin-bottom:14px;
+}
+.demo-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:8px;margin-bottom:12px;
+}
+.demo-grid button{
+  background:var(--white);border:1.5px solid var(--gold);
+  color:var(--navy);font-family:inherit;
+  padding:10px 8px;border-radius:9px;
+  font-size:11.5px;font-weight:600;
+  cursor:pointer;line-height:1.2;
+  transition:background .15s;
+}
+.demo-grid button:active{background:var(--cream-2)}
+.demo-grid button.grand{
+  background:var(--gold);color:var(--navy);font-weight:800;
+}
+.demo-actions{display:flex;gap:8px;margin-top:6px}
+.demo-actions button{
+  flex:1;background:var(--navy);color:var(--white);
+  border:none;font-family:inherit;font-weight:700;
+  padding:12px;border-radius:9px;
+  font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  cursor:pointer;
+}
+.demo-actions button.alt{background:transparent;color:var(--navy);border:1.5px solid var(--navy)}
+
+/* Confetti — lives inside the overlay so it falls behind the prize card */
+.confetti{position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+.result-card{position:relative;z-index:2}
+.confetti i{
+  position:absolute;top:-20px;
+  width:8px;height:14px;
+  opacity:0;
+  animation:fall 4s linear forwards;
+}
+@keyframes fall{
+  0%{transform:translateY(0) rotate(0);opacity:0}
+  10%{opacity:1}
+  100%{transform:translateY(110vh) rotate(900deg);opacity:.9}
+}
+
+/* Tiny tweaks for very small phones */
+@media (max-width:360px){
+  .logo .name{font-size:38px}
+  .headline h1{font-size:34px}
+  .result-prize{font-size:28px}
+  .result-prize.grand{font-size:25px}
+}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="ribbon" id="ribbon" title="Tap for demo controls">PROTOTYPE • TAP FOR DEMO CONTROLS</div>
+
+<div class="app">
+
+  <!-- ============ SCREEN 1: FORM ============ -->
+  <section id="screen-form" class="screen active">
+    <div class="logo">
+      <img src="newport-logo-reverse.svg" alt="Newport Creamery — Established 1928">
+    </div>
+
+    <div class="headline">
+      <h1>Spin to <em>Win</em></h1>
+      <p>Drop your info, give the wheel a whirl, and walk away with a treat — on the house.</p>
+    </div>
+
+    <form class="card" id="signupForm" novalidate>
+      <div class="field" id="f-name">
+        <label for="name">Name</label>
+        <input id="name" name="name" type="text" autocomplete="name" placeholder="First &amp; last name" required>
+        <div class="field-err">Please enter your name.</div>
+      </div>
+      <div class="field" id="f-email">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+        <div class="field-err">Please enter a valid email.</div>
+      </div>
+      <div class="field" id="f-phone">
+        <label for="phone">Phone <span class="opt">optional — for SMS coupon</span></label>
+        <input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="(401) 555-0100">
+      </div>
+      <button type="submit" class="btn">Spin</button>
+      <div class="legal">By spinning, you agree to receive your reward by email or text. One entry per visit. Limit one prize per customer.</div>
+    </form>
+
+    <div class="foot">A Rhode Island Tradition · Since 1928</div>
+  </section>
+
+  <!-- ============ SCREEN 2: WHEEL ============ -->
+  <section id="screen-wheel" class="screen">
+    <div class="logo compact">
+      <img src="newport-logo-reverse.svg" alt="Newport Creamery">
+    </div>
+
+    <div class="headline" style="margin-bottom:14px">
+      <h1 style="font-size:30px">Take a Spin</h1>
+    </div>
+
+    <div class="wheel-stage">
+      <div class="wheel-wrap">
+        <div class="wheel-pointer" aria-hidden="true">
+          <svg viewBox="0 0 36 50">
+            <path d="M18 50 L4 6 Q18 -2 32 6 Z" fill="#d12a2a" stroke="#152e4a" stroke-width="2.5" stroke-linejoin="round"/>
+            <circle cx="18" cy="10" r="3" fill="#fff7e6"/>
+          </svg>
+        </div>
+        <div class="wheel-frame">
+          <div class="wheel">
+            <svg id="wheelSvg" class="wheel-svg" viewBox="-200 -200 400 400" preserveAspectRatio="xMidYMid meet"></svg>
+          </div>
+          <div class="wheel-hub" aria-hidden="true"></div>
+        </div>
+      </div>
+      <div class="spin-status" id="spinStatus">Tap the button to spin the wheel.</div>
+      <button id="spinBtn" class="btn">Spin the Wheel</button>
+    </div>
+
+    <div class="foot">No purchase necessary · One spin per visit</div>
+  </section>
+</div>
+
+<!-- ============ RESULT MODAL ============ -->
+<div id="resultOverlay" class="overlay">
+  <div id="confetti" class="confetti" aria-hidden="true"></div>
+  <div class="result-card">
+    <div class="ribbon-tag">YOU WON</div>
+    <div class="result-banner" id="resultBanner">CONGRATS!</div>
+    <div class="result-sub" id="resultSub">A treat is on its way.</div>
+    <div class="result-prize" id="prizeName">—</div>
+    <div class="result-desc" id="prizeDesc">—</div>
+    <div class="coupon">
+      <div class="lbl">Show this code at any Newport Creamery</div>
+      <div class="code" id="couponCode">—</div>
+      <div class="copy" id="copyBtn">Tap to copy</div>
+    </div>
+    <div class="delivery">
+      <div class="del-row" id="rowEmail">
+        <span class="icon">✉</span>
+        <div class="info">
+          <b>Email sent</b>
+          <span id="deliveryEmail">—</span>
+        </div>
+        <span class="check">✓</span>
+      </div>
+      <div class="del-row" id="rowSms">
+        <span class="icon">📱</span>
+        <div class="info">
+          <b>Text sent</b>
+          <span id="deliveryPhone">—</span>
+        </div>
+        <span class="check">✓</span>
+      </div>
+    </div>
+    <div class="fine" id="fineprint">Valid at any Newport Creamery location through 9/30/26. One per customer. Not combinable with other offers.</div>
+    <button class="btn" id="doneBtn">Done</button>
+    <button class="btn ghost" id="againBtn" style="margin-top:10px">Spin again (demo)</button>
+  </div>
+</div>
+
+<!-- ============ DEMO CONTROLS ============ -->
+<div id="demoModal" class="demo-modal">
+  <div class="demo-sheet">
+    <h3>Demo controls</h3>
+    <div class="demo-help">Force a specific prize for the next spin, or reset the prototype.</div>
+    <div class="demo-grid" id="demoGrid"></div>
+    <div class="demo-actions">
+      <button id="demoRandom">Random spin</button>
+      <button class="alt" id="demoReset">Reset to start</button>
+    </div>
+    <div class="demo-actions" style="margin-top:8px">
+      <button class="alt" id="demoClose">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ------------------------------------------------------------------
+   PRIZES — order matches wheel slice index (0 at top, going clockwise)
+   weight = relative probability for the random spin
+------------------------------------------------------------------ */
+const PRIZES = [
+  { id:0, lines:['ALL','SUMMER'], name:'Awful Awful All Summer', code:'NCSUMMER26', weight:3,
+    desc:'The grand prize. One Awful Awful, every visit, all summer long.', grand:true },
+  { id:1, lines:['WAFFLE','CONE'], name:'1 Waffle Cone or Dish', code:'NCWAFFLE26', weight:12,
+    desc:'One free waffle cone or dish of ice cream — your scoop, your call.' },
+  { id:2, lines:['AWFUL','AWFUL'], name:'1 Awful Awful', code:'NCAA26-A', weight:15,
+    desc:'One free Awful Awful. Awful Big, Awful Good. Our signature thick frappe since 1948.' },
+  { id:3, lines:['COFFEE','DRINK'], name:'1 Coffee Drink', code:'NCJOE26', weight:12,
+    desc:'One free coffee drink — hot, iced, or blended. Whatever fuels you.' },
+  { id:4, lines:['SMASH','BURGER'], name:'1 Smash Burger', code:'NCSMASH26', weight:10,
+    desc:'One free Newport Creamery smash burger. Crisp edges, juicy middle.' },
+  { id:5, lines:['AWFUL','AWFUL'], name:'1 Awful Awful', code:'NCAA26-B', weight:15,
+    desc:'One free Awful Awful. Awful Big, Awful Good. Our signature thick frappe since 1948.' },
+  { id:6, lines:['BREAKFAST','SANDWICH'], name:'1 Breakfast Sandwich', code:'NCBFAST26', weight:13,
+    desc:'One free Newport Creamery breakfast sandwich. Egg, cheese, and your choice of meat.' },
+  { id:7, lines:['10%','OFF'], name:'10% Off Coupon', code:'NC10OFF', weight:20,
+    desc:'10% off your next Newport Creamery visit.' }
+];
+
+const SLICES = PRIZES.length;            // 8
+const DEG = 360 / SLICES;                // 45
+const RADIUS = 195;
+
+/* ------------------------------------------------------------------
+   Build the wheel SVG
+------------------------------------------------------------------ */
+function buildWheel(){
+  const svg = document.getElementById('wheelSvg');
+  // Brand-extracted colors. Slice 0 (grand prize) is red.
+  const NAVY = '#1d3c5d', GOLD = '#f6c636', RED = '#d12a2a';
+  let html = '';
+
+  for (let i=0; i<SLICES; i++){
+    // Slice spans angles measured from top, clockwise
+    const startTop = i * DEG - DEG/2;
+    const endTop   = i * DEG + DEG/2;
+    const a1 = (startTop - 90) * Math.PI/180;
+    const a2 = (endTop   - 90) * Math.PI/180;
+    const x1 = (Math.cos(a1)*RADIUS).toFixed(2);
+    const y1 = (Math.sin(a1)*RADIUS).toFixed(2);
+    const x2 = (Math.cos(a2)*RADIUS).toFixed(2);
+    const y2 = (Math.sin(a2)*RADIUS).toFixed(2);
+
+    let fill, txtFill, dotColor;
+    if (PRIZES[i].grand){
+      fill = RED;          txtFill = '#fff7e6'; dotColor = '#f6c636';
+    } else if (i % 2 === 1){
+      fill = GOLD;         txtFill = NAVY;      dotColor = NAVY;
+    } else {
+      fill = NAVY;         txtFill = '#f3ead4'; dotColor = GOLD;
+    }
+    const isGold = fill === GOLD;
+
+    // pie slice path
+    html += `<path d="M0,0 L${x1},${y1} A${RADIUS},${RADIUS} 0 0,1 ${x2},${y2} Z"
+                   fill="${fill}" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round"/>`;
+
+    // accent dot near outer edge
+    const dotAngTop = i * DEG;
+    const dotAngSvg = (dotAngTop - 90) * Math.PI/180;
+    const dx = (Math.cos(dotAngSvg) * (RADIUS - 14)).toFixed(2);
+    const dy = (Math.sin(dotAngSvg) * (RADIUS - 14)).toFixed(2);
+    html += `<circle cx="${dx}" cy="${dy}" r="3" fill="${dotColor}" opacity=".7"/>`;
+
+    // Label — two stacked lines positioned along the slice's radial axis.
+    // Group is rotated by i*DEG; inside, local "up" (-y) points toward the outer rim of slice i.
+    const groupRot = i * DEG;       // 0,45,90,...
+    const textY = -(RADIUS * 0.58); // radial distance outward (in slice's local frame, 'up' is outward)
+
+    // For slices in the bottom half of the wheel (groupRot between 90 and 270 exclusive),
+    // flip text 180° so it reads right-side up when wheel is stationary.
+    const flip = (groupRot > 90 && groupRot < 270) ? 180 : 0;
+
+    const lines = PRIZES[i].lines;
+    const lineGap = 13;
+    const baseDy = -((lines.length - 1) * lineGap) / 2;
+    const tspans = lines.map((ln, idx) => {
+      const dy = idx === 0 ? baseDy : lineGap;
+      return `<tspan x="0" dy="${dy}">${ln}</tspan>`;
+    }).join('');
+
+    const grandStar = PRIZES[i].grand
+      ? `<text x="0" y="${textY + 28}" transform="rotate(${flip} 0 ${textY})"
+              text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="${txtFill}" opacity="0.85">★ GRAND ★</text>`
+      : '';
+
+    html += `<g transform="rotate(${groupRot})">
+               <text x="0" y="${textY}"
+                     transform="rotate(${flip} 0 ${textY})"
+                     text-anchor="middle"
+                     font-family="Inter, system-ui, sans-serif"
+                     font-size="13.5"
+                     font-weight="800"
+                     letter-spacing="0.6"
+                     fill="${txtFill}">
+                 ${tspans}
+               </text>
+               ${grandStar}
+             </g>`;
+  }
+
+  // Outer ring + tiny center sparkle
+  html += `<circle cx="0" cy="0" r="${RADIUS}" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="1"/>`;
+
+  svg.innerHTML = html;
+}
+
+/* ------------------------------------------------------------------
+   Random weighted prize pick
+------------------------------------------------------------------ */
+function pickWeightedPrize(){
+  const total = PRIZES.reduce((s,p)=>s+p.weight,0);
+  let r = Math.random()*total;
+  for (const p of PRIZES){
+    r -= p.weight;
+    if (r <= 0) return p;
+  }
+  return PRIZES[PRIZES.length-1];
+}
+
+/* ------------------------------------------------------------------
+   Spin animation
+------------------------------------------------------------------ */
+let currentRotation = 0;
+let isSpinning = false;
+let forcedPrizeId = null; // demo override
+
+function spin(){
+  if (isSpinning) return;
+  isSpinning = true;
+
+  const prize = (forcedPrizeId !== null)
+    ? PRIZES[forcedPrizeId]
+    : pickWeightedPrize();
+  forcedPrizeId = null; // consume
+
+  document.getElementById('spinBtn').disabled = true;
+  document.getElementById('spinStatus').textContent = 'Spinning…';
+
+  // To bring slice i to the pointer (top), wheel must rotate by -i*DEG (mod 360).
+  // Equivalent positive (clockwise) rotation: ((SLICES - i) * DEG) % 360.
+  // Always add 6 full rotations on top of current rotation for drama.
+  const baseTarget = ((SLICES - prize.id) * DEG) % 360;
+  const jitter = (Math.random() * 30) - 15; // ±15° within the slice
+  let target = baseTarget + jitter;
+
+  // Make target strictly greater than current + 6 turns
+  const minimum = currentRotation + 360 * 6;
+  while (target < minimum) target += 360;
+
+  currentRotation = target;
+  const wheel = document.getElementById('wheelSvg');
+  wheel.classList.add('spinning');
+  wheel.style.transform = `rotate(${currentRotation}deg)`;
+
+  setTimeout(()=>{
+    showResult(prize);
+    isSpinning = false;
+    document.getElementById('spinBtn').disabled = false;
+    document.getElementById('spinStatus').textContent = 'Tap the button to spin the wheel.';
+  }, 6300);
+}
+
+/* ------------------------------------------------------------------
+   Result reveal
+------------------------------------------------------------------ */
+let userData = { name:'', email:'', phone:'' };
+
+function showResult(prize){
+  document.getElementById('prizeName').textContent  = prize.name;
+  document.getElementById('prizeName').classList.toggle('grand', !!prize.grand);
+  document.getElementById('prizeDesc').textContent  = prize.desc;
+  document.getElementById('couponCode').textContent = prize.code;
+
+  document.getElementById('resultBanner').textContent = prize.grand ? 'JACKPOT!' : 'CONGRATS!';
+  document.getElementById('resultSub').textContent    = prize.grand
+    ? 'You hit the grand prize.'
+    : userData.name ? `Nice spin, ${userData.name.split(' ')[0]}.` : 'A treat is on its way.';
+
+  document.getElementById('deliveryEmail').textContent = userData.email || 'you@example.com';
+  const sms = document.getElementById('rowSms');
+  if (userData.phone){
+    sms.style.display = '';
+    document.getElementById('deliveryPhone').textContent = formatPhone(userData.phone);
+  } else {
+    sms.style.display = 'none';
+  }
+
+  document.getElementById('resultOverlay').classList.add('active');
+  fireConfetti(prize.grand ? 90 : 50);
+}
+
+function fireConfetti(count){
+  const wrap = document.getElementById('confetti');
+  wrap.innerHTML = '';
+  const palette = ['#f6c636','#ffd75a','#f3ead4','#ffffff','#d12a2a'];
+  for (let i=0; i<count; i++){
+    const el = document.createElement('i');
+    el.style.left = (Math.random()*100) + 'vw';
+    el.style.background = palette[Math.floor(Math.random()*palette.length)];
+    el.style.animationDuration = (2.6 + Math.random()*2.4) + 's';
+    el.style.animationDelay = (Math.random()*0.6) + 's';
+    el.style.transform = `rotate(${Math.random()*360}deg)`;
+    el.style.borderRadius = Math.random() > .6 ? '50%' : '1px';
+    wrap.appendChild(el);
+  }
+  setTimeout(()=>{wrap.innerHTML='';}, 5500);
+}
+
+function formatPhone(p){
+  const d = p.replace(/\D/g,'');
+  if (d.length === 10) return `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
+  return p;
+}
+
+/* ------------------------------------------------------------------
+   Form handling + screen transitions
+------------------------------------------------------------------ */
+const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+document.getElementById('signupForm').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const name  = document.getElementById('name').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+
+  let ok = true;
+  toggleErr('f-name',  name.length < 2);
+  toggleErr('f-email', !emailRe.test(email));
+  if (name.length < 2 || !emailRe.test(email)) ok = false;
+
+  if (!ok) return;
+
+  userData = { name, email, phone };
+  goToWheel();
+});
+
+function toggleErr(id, isErr){
+  document.getElementById(id).classList.toggle('error', isErr);
+}
+
+function goToWheel(){
+  document.getElementById('screen-form').classList.remove('active');
+  document.getElementById('screen-wheel').classList.add('active');
+  // Auto-spin shortly after wheel comes into view
+  setTimeout(spin, 900);
+}
+
+document.getElementById('spinBtn').addEventListener('click', spin);
+
+document.getElementById('doneBtn').addEventListener('click', resetAll);
+document.getElementById('againBtn').addEventListener('click', ()=>{
+  document.getElementById('resultOverlay').classList.remove('active');
+  setTimeout(spin, 350);
+});
+
+function resetAll(){
+  document.getElementById('resultOverlay').classList.remove('active');
+  document.getElementById('screen-wheel').classList.remove('active');
+  document.getElementById('screen-form').classList.add('active');
+  document.getElementById('signupForm').reset();
+  ['f-name','f-email','f-phone'].forEach(id=>document.getElementById(id).classList.remove('error'));
+  // gentle reset of wheel rotation (no animation)
+  const w = document.getElementById('wheelSvg');
+  w.classList.remove('spinning');
+  w.style.transform = `rotate(${currentRotation}deg)`; // keep current visual to avoid flash
+}
+
+/* Coupon copy */
+document.getElementById('copyBtn').addEventListener('click', ()=>{
+  const code = document.getElementById('couponCode').textContent;
+  if (navigator.clipboard){
+    navigator.clipboard.writeText(code).then(()=>{
+      const c = document.getElementById('copyBtn');
+      const old = c.textContent;
+      c.textContent = 'Copied ✓';
+      setTimeout(()=>c.textContent = old, 1500);
+    });
+  }
+});
+
+/* ------------------------------------------------------------------
+   Demo controls
+------------------------------------------------------------------ */
+const ribbon = document.getElementById('ribbon');
+const demoModal = document.getElementById('demoModal');
+const demoGrid = document.getElementById('demoGrid');
+
+PRIZES.forEach((p)=>{
+  const b = document.createElement('button');
+  b.textContent = p.name;
+  if (p.grand) b.classList.add('grand');
+  b.addEventListener('click', ()=>{
+    forcedPrizeId = p.id;
+    demoModal.classList.remove('active');
+    // If on form, autofill demo data and go to wheel
+    if (document.getElementById('screen-form').classList.contains('active')){
+      userData = { name:'Demo User', email:'demo@newportcreamery.com', phone:'4015550100' };
+      document.getElementById('screen-form').classList.remove('active');
+      document.getElementById('screen-wheel').classList.add('active');
+      setTimeout(spin, 700);
+    } else if (!isSpinning){
+      // already on wheel screen
+      if (document.getElementById('resultOverlay').classList.contains('active')){
+        document.getElementById('resultOverlay').classList.remove('active');
+        setTimeout(spin, 350);
+      } else {
+        spin();
+      }
+    }
+  });
+  demoGrid.appendChild(b);
+});
+
+ribbon.addEventListener('click', ()=>demoModal.classList.add('active'));
+document.getElementById('demoClose').addEventListener('click', ()=>demoModal.classList.remove('active'));
+document.getElementById('demoRandom').addEventListener('click', ()=>{
+  forcedPrizeId = null;
+  demoModal.classList.remove('active');
+  if (document.getElementById('screen-form').classList.contains('active')){
+    userData = { name:'Demo User', email:'demo@newportcreamery.com', phone:'4015550100' };
+    document.getElementById('screen-form').classList.remove('active');
+    document.getElementById('screen-wheel').classList.add('active');
+    setTimeout(spin, 700);
+  } else if (!isSpinning){
+    if (document.getElementById('resultOverlay').classList.contains('active')){
+      document.getElementById('resultOverlay').classList.remove('active');
+      setTimeout(spin, 350);
+    } else {
+      spin();
+    }
+  }
+});
+document.getElementById('demoReset').addEventListener('click', ()=>{
+  demoModal.classList.remove('active');
+  resetAll();
+});
+
+/* ------------------------------------------------------------------
+   Init
+------------------------------------------------------------------ */
+buildWheel();
+</script>
+</body>
+</html>
